@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SendMessageBody {
-  /** Phone number with country code (e.g. 15551234567) */
-  to: string;
-  content: string;
+export interface SuccessResponse {
+  success: boolean;
+  message?: string;
 }

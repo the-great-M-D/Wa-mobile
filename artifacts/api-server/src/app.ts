@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { connectBot } from "./lib/whatsapp";
 
 const app: Express = express();
 
@@ -30,5 +31,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+// Start WhatsApp bot connection on server startup
+connectBot().catch((err) => {
+  logger.error({ err }, "Failed to start WhatsApp bot on startup");
+});
 
 export default app;

@@ -48,6 +48,27 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Project: WA Control
+
+WhatsApp bot management dashboard. A React frontend connected to a Node.js backend using Baileys for WhatsApp connectivity.
+
+- Bot connects via phone number pairing (no QR code)
+- Dashboard manages connections, message history, contacts, auto-reply rules, and settings
+- SSE live event stream from bot to frontend
+- DB tables: `wa_messages`, `wa_contacts`, `wa_config`, `wa_auto_replies`
+- Designed to run on Termux-compatible environments
+
+### Dashboard artifact (`artifacts/dashboard`)
+
+React + Vite + Tailwind, dark slate theme, JetBrains Mono font. Pages:
+- `/` — Console (pairing UI + live event stream)
+- `/messages` — Message history + outbound sender
+- `/contacts` — Contact list
+- `/auto-replies` — Auto-reply rules CRUD
+- `/settings` — Bot behavior configuration
+
+Design tokens: dark slate background (`222.2 84% 4.9%`), indigo primary (`243 75% 59%`), emerald=connected, amber=connecting, rose=disconnected.
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)

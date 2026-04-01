@@ -2,32 +2,27 @@ openapi: 3.1.0
 info:
   title: Api
   version: 0.1.0
-  description: Admin Dashboard API
+  description: WhatsApp Bot Dashboard API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
-  - name: events
-    description: Live event feed
-  - name: groups
-    description: Group management
+  - name: bot
+    description: Bot connection and status
   - name: messages
-    description: Message sending
-  - name: status
-    description: System status
-  - name: users
-    description: User management
-  - name: admin
-    description: Admin controls
+    description: Message history
+  - name: contacts
+    description: Contact management
+  - name: config
+    description: Bot configuration
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -36,143 +31,58 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /events:
+  /bot/status:
     get:
-      operationId: listEvents
-      tags: [events]
-      summary: List recent events
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 50
-        - name: groupId
-          in: query
-          schema:
-            type: string
-        - name: level
-          in: query
-          schema:
-            type: string
-            enum: [info, warn, error, success]
+      operationId: getBotStatus
+      tags: [bot]
+      summary: Get bot connection status
       responses:
         "200":
-          description: List of events
+          description: Bot status
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Event"
+                $ref: "#/components/schemas/BotStatus"
 
-  /events/stats:
-    get:
-      operationId: getEventStats
-      tags: [events]
-      summary: Get event statistics summary
-      responses:
-        "200":
-          description: Event statistics
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventStats"
-
-  /groups:
-    get:
-      operationId: listGroups
-      tags: [groups]
-      summary: List all groups
-      responses:
-        "200":
-          description: List of groups
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Group"
+  /bot/pair:
     post:
-      operationId: createGroup
-      tags: [groups]
-      summary: Create a group
+      operationId: requestPairingCode
+      tags: [bot]
+      summary: Request pairing code for a phone number
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateGroupBody"
+              $ref: "#/components/schemas/PairRequestBody"
       responses:
-        "201":
-          description: Created group
+        "200":
+          description: Pairing code issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Group"
+                $ref: "#/components/schemas/PairResponse"
 
-  /groups/{id}:
-    get:
-      operationId: getGroup
-      tags: [groups]
-      summary: Get a group by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+  /bot/logout:
+    post:
+      operationId: logoutBot
+      tags: [bot]
+      summary: Disconnect and log out the bot
       responses:
         "200":
-          description: Group details
+          description: Logged out
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Group"
-    patch:
-      operationId: updateGroup
-      tags: [groups]
-      summary: Update a group
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateGroupBody"
-      responses:
-        "200":
-          description: Updated group
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Group"
-    delete:
-      operationId: deleteGroup
-      tags: [groups]
-      summary: Delete a group
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Deleted
+                $ref: "#/components/schemas/SuccessResponse"
 
   /messages:
     get:
       operationId: listMessages
       tags: [messages]
-      summary: List sent messages
+      summary: List message history
       parameters:
-        - name: groupId
+        - name: contactId
           in: query
           schema:
             type: string
@@ -180,7 +90,13 @@ paths:
           in: query
           schema:
             type: integer
-            default: 20
+            default: 50
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound, all]
+            default: all
       responses:
         "200":
           description: List of messages
@@ -190,10 +106,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Message"
+
+  /messages/stats:
+    get:
+      operationId: getMessageStats
+      tags: [messages]
+      summary: Get message statistics
+      responses:
+        "200":
+          description: Message statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageStats"
+
+  /messages/send:
     post:
       operationId: sendMessage
       tags: [messages]
-      summary: Send a message to a group
+      summary: Send a message to a contact
       requestBody:
         required: true
         content:
@@ -202,71 +133,94 @@ paths:
               $ref: "#/components/schemas/SendMessageBody"
       responses:
         "201":
-          description: Sent message
+          description: Message sent
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Message"
 
-  /status:
+  /contacts:
     get:
-      operationId: getSystemStatus
-      tags: [status]
-      summary: Get system status overview
+      operationId: listContacts
+      tags: [contacts]
+      summary: List known contacts
       responses:
         "200":
-          description: System status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SystemStatus"
-
-  /users:
-    get:
-      operationId: listUsers
-      tags: [users]
-      summary: List all users
-      parameters:
-        - name: groupId
-          in: query
-          schema:
-            type: string
-        - name: role
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: List of users
+          description: List of contacts
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/User"
-    post:
-      operationId: createUser
-      tags: [users]
-      summary: Create a user
+                  $ref: "#/components/schemas/Contact"
+
+  /config:
+    get:
+      operationId: getBotConfig
+      tags: [config]
+      summary: Get bot configuration
+      responses:
+        "200":
+          description: Bot configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotConfig"
+    patch:
+      operationId: updateBotConfig
+      tags: [config]
+      summary: Update bot configuration
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateUserBody"
+              $ref: "#/components/schemas/UpdateBotConfigBody"
       responses:
-        "201":
-          description: Created user
+        "200":
+          description: Updated config
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/BotConfig"
 
-  /users/{id}:
+  /config/auto-replies:
+    get:
+      operationId: listAutoReplies
+      tags: [config]
+      summary: List auto-reply rules
+      responses:
+        "200":
+          description: Auto-reply rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AutoReply"
+    post:
+      operationId: createAutoReply
+      tags: [config]
+      summary: Create an auto-reply rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAutoReplyBody"
+      responses:
+        "201":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoReply"
+
+  /config/auto-replies/{id}:
     patch:
-      operationId: updateUser
-      tags: [users]
-      summary: Update a user
+      operationId: updateAutoReply
+      tags: [config]
+      summary: Update an auto-reply rule
       parameters:
         - name: id
           in: path
@@ -278,18 +232,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateUserBody"
+              $ref: "#/components/schemas/UpdateAutoReplyBody"
       responses:
         "200":
-          description: Updated user
+          description: Updated rule
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/AutoReply"
     delete:
-      operationId: deleteUser
-      tags: [users]
-      summary: Delete a user
+      operationId: deleteAutoReply
+      tags: [config]
+      summary: Delete an auto-reply rule
       parameters:
         - name: id
           in: path
@@ -300,49 +254,6 @@ paths:
         "204":
           description: Deleted
 
-  /admin/settings:
-    get:
-      operationId: getAdminSettings
-      tags: [admin]
-      summary: Get admin settings
-      responses:
-        "200":
-          description: Admin settings
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminSettings"
-    patch:
-      operationId: updateAdminSettings
-      tags: [admin]
-      summary: Update admin settings
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateAdminSettingsBody"
-      responses:
-        "200":
-          description: Updated settings
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminSettings"
-
-  /dashboard/summary:
-    get:
-      operationId: getDashboardSummary
-      tags: [admin]
-      summary: Get dashboard summary stats
-      responses:
-        "200":
-          description: Dashboard summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-
 components:
   schemas:
     HealthStatus:
@@ -350,348 +261,227 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
-    Event:
+    SuccessResponse:
       type: object
       properties:
-        id:
-          type: string
-        level:
-          type: string
-          enum: [info, warn, error, success]
+        success:
+          type: boolean
         message:
           type: string
-        source:
+      required: [success]
+
+    BotStatus:
+      type: object
+      properties:
+        state:
           type: string
-        groupId:
+          enum: [disconnected, connecting, awaiting_pairing, connected]
+        phoneNumber:
           type: string
           nullable: true
-        groupName:
+        deviceName:
           type: string
           nullable: true
-        metadata:
-          type: object
+        platform:
+          type: string
           nullable: true
-        createdAt:
+        connectedAt:
           type: string
           format: date-time
-      required:
-        - id
-        - level
-        - message
-        - source
-        - createdAt
-
-    EventStats:
-      type: object
-      properties:
-        total:
-          type: integer
-        info:
-          type: integer
-        warn:
-          type: integer
-        error:
-          type: integer
-        success:
-          type: integer
-        lastHour:
-          type: integer
-      required:
-        - total
-        - info
-        - warn
-        - error
-        - success
-        - lastHour
-
-    Group:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
           nullable: true
-        status:
-          type: string
-          enum: [active, inactive, maintenance]
-        memberCount:
+        uptime:
           type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - status
-        - memberCount
-        - createdAt
-        - updatedAt
+          nullable: true
+      required: [state]
 
-    CreateGroupBody:
+    PairRequestBody:
       type: object
       properties:
-        name:
+        phoneNumber:
           type: string
-        description:
-          type: string
-        status:
-          type: string
-          enum: [active, inactive, maintenance]
-          default: active
-      required:
-        - name
+          description: Phone number with country code e.g. 15551234567
+      required: [phoneNumber]
 
-    UpdateGroupBody:
+    PairResponse:
       type: object
       properties:
-        name:
+        code:
           type: string
-        description:
+        expiresAt:
           type: string
-        status:
-          type: string
-          enum: [active, inactive, maintenance]
+          format: date-time
+      required: [code, expiresAt]
 
     Message:
       type: object
       properties:
         id:
           type: string
+        remoteJid:
+          type: string
+        contactName:
+          type: string
+          nullable: true
         content:
           type: string
-        groupId:
+        direction:
           type: string
-          nullable: true
-        groupName:
+          enum: [inbound, outbound]
+        messageType:
           type: string
-          nullable: true
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
+          enum: [text, image, audio, video, document, sticker, reaction, other]
         status:
           type: string
-          enum: [sent, delivered, failed]
-        sentBy:
-          type: string
-        recipientCount:
-          type: integer
+          enum: [sent, delivered, read, failed]
+        isAutoReply:
+          type: boolean
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - content
-        - priority
-        - status
-        - sentBy
-        - recipientCount
-        - createdAt
+      required: [id, remoteJid, content, direction, messageType, status, isAutoReply, createdAt]
+
+    MessageStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        inbound:
+          type: integer
+        outbound:
+          type: integer
+        autoReplies:
+          type: integer
+        today:
+          type: integer
+        uniqueContacts:
+          type: integer
+      required: [total, inbound, outbound, autoReplies, today, uniqueContacts]
 
     SendMessageBody:
       type: object
       properties:
+        to:
+          type: string
+          description: Phone number with country code (e.g. 15551234567)
         content:
           type: string
-        groupId:
-          type: string
-          nullable: true
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
-          default: normal
-      required:
-        - content
+      required: [to, content]
 
-    SystemStatus:
-      type: object
-      properties:
-        overall:
-          type: string
-          enum: [operational, degraded, outage]
-        services:
-          type: array
-          items:
-            $ref: "#/components/schemas/ServiceStatus"
-        uptime:
-          type: number
-        lastChecked:
-          type: string
-          format: date-time
-      required:
-        - overall
-        - services
-        - uptime
-        - lastChecked
-
-    ServiceStatus:
-      type: object
-      properties:
-        name:
-          type: string
-        status:
-          type: string
-          enum: [operational, degraded, outage]
-        latency:
-          type: number
-          nullable: true
-        description:
-          type: string
-          nullable: true
-      required:
-        - name
-        - status
-
-    User:
+    Contact:
       type: object
       properties:
         id:
           type: string
+        jid:
+          type: string
         name:
           type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum: [admin, moderator, member, viewer]
-        status:
-          type: string
-          enum: [active, suspended, pending]
-        groupId:
-          type: string
           nullable: true
-        groupName:
+        phoneNumber:
           type: string
-          nullable: true
-        lastSeen:
-          type: string
-          format: date-time
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - email
-        - role
-        - status
-        - createdAt
-
-    CreateUserBody:
-      type: object
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum: [admin, moderator, member, viewer]
-          default: member
-        groupId:
-          type: string
-          nullable: true
-      required:
-        - name
-        - email
-
-    UpdateUserBody:
-      type: object
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum: [admin, moderator, member, viewer]
-        status:
-          type: string
-          enum: [active, suspended, pending]
-        groupId:
-          type: string
-          nullable: true
-
-    AdminSettings:
-      type: object
-      properties:
-        id:
-          type: string
-        systemName:
-          type: string
-        maintenanceMode:
-          type: boolean
-        allowRegistration:
-          type: boolean
-        maxGroupSize:
+        messageCount:
           type: integer
-        defaultRole:
+        lastMessageAt:
           type: string
-          enum: [admin, moderator, member, viewer]
-        notificationsEnabled:
+          format: date-time
+          nullable: true
+      required: [id, jid, phoneNumber, messageCount]
+
+    BotConfig:
+      type: object
+      properties:
+        id:
+          type: string
+        botName:
+          type: string
+        prefix:
+          type: string
+        autoReplyEnabled:
           type: boolean
+        readReceiptsEnabled:
+          type: boolean
+        typingIndicatorEnabled:
+          type: boolean
+        welcomeMessage:
+          type: string
+          nullable: true
         updatedAt:
           type: string
           format: date-time
-      required:
-        - id
-        - systemName
-        - maintenanceMode
-        - allowRegistration
-        - maxGroupSize
-        - defaultRole
-        - notificationsEnabled
-        - updatedAt
+      required: [id, botName, prefix, autoReplyEnabled, readReceiptsEnabled, typingIndicatorEnabled, updatedAt]
 
-    UpdateAdminSettingsBody:
+    UpdateBotConfigBody:
       type: object
       properties:
-        systemName:
+        botName:
           type: string
-        maintenanceMode:
-          type: boolean
-        allowRegistration:
-          type: boolean
-        maxGroupSize:
-          type: integer
-        defaultRole:
+        prefix:
           type: string
-          enum: [admin, moderator, member, viewer]
-        notificationsEnabled:
+        autoReplyEnabled:
           type: boolean
+        readReceiptsEnabled:
+          type: boolean
+        typingIndicatorEnabled:
+          type: boolean
+        welcomeMessage:
+          type: string
+          nullable: true
 
-    DashboardSummary:
+    AutoReply:
       type: object
       properties:
-        totalUsers:
-          type: integer
-        activeUsers:
-          type: integer
-        totalGroups:
-          type: integer
-        totalMessages:
-          type: integer
-        recentEvents:
-          type: integer
-        errorRate:
-          type: number
-        systemHealth:
+        id:
           type: string
-          enum: [operational, degraded, outage]
-      required:
-        - totalUsers
-        - activeUsers
-        - totalGroups
-        - totalMessages
-        - recentEvents
-        - errorRate
-        - systemHealth
+        trigger:
+          type: string
+        response:
+          type: string
+        matchType:
+          type: string
+          enum: [exact, contains, startsWith, regex]
+        caseSensitive:
+          type: boolean
+        enabled:
+          type: boolean
+        hitCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, trigger, response, matchType, caseSensitive, enabled, hitCount, createdAt]
+
+    CreateAutoReplyBody:
+      type: object
+      properties:
+        trigger:
+          type: string
+        response:
+          type: string
+        matchType:
+          type: string
+          enum: [exact, contains, startsWith, regex]
+          default: contains
+        caseSensitive:
+          type: boolean
+          default: false
+        enabled:
+          type: boolean
+          default: true
+      required: [trigger, response]
+
+    UpdateAutoReplyBody:
+      type: object
+      properties:
+        trigger:
+          type: string
+        response:
+          type: string
+        matchType:
+          type: string
+          enum: [exact, contains, startsWith, regex]
+        caseSensitive:
+          type: boolean
+        enabled:
+          type: boolean
