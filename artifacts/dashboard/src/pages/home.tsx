@@ -86,9 +86,9 @@ export function Home() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
         <div>
-          <h1 className="text-3xl font-mono font-bold tracking-tight mb-2">Ops Console</h1>
+          <h1 className="text-2xl md:text-3xl font-mono font-bold tracking-tight mb-1">Ops Console</h1>
           <p className="text-muted-foreground font-mono text-sm">Real-time WhatsApp connection management.</p>
         </div>
 
@@ -190,7 +190,7 @@ export function Home() {
         </Card>
 
         {/* Live Event Stream */}
-        <Card className="md:col-span-2 border-border bg-[#0a0a0a] shadow-inner overflow-hidden flex flex-col h-[500px]">
+        <Card className="md:col-span-2 border-border bg-[#0a0a0a] shadow-inner overflow-hidden flex flex-col h-[380px] md:h-[500px]">
           <div className="h-12 border-b border-border/50 bg-black/40 flex items-center px-4 justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-muted-foreground" />

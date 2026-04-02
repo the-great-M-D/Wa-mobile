@@ -70,13 +70,13 @@ export function Messages() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-mono font-bold tracking-tight mb-2">Messages</h1>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-mono font-bold tracking-tight mb-1">Messages</h1>
         <p className="text-muted-foreground font-mono text-sm">Message history and outbound sender.</p>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         {statCards.map((s) => {
           const Icon = s.icon;
           return (
@@ -95,7 +95,7 @@ export function Messages() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Message list */}
-        <Card className="lg:col-span-2 border-border bg-card flex flex-col h-[560px]">
+        <Card className="lg:col-span-2 border-border bg-card flex flex-col h-[420px] md:h-[560px]">
           <CardHeader className="border-b border-border pb-4 flex-row items-center justify-between shrink-0">
             <CardTitle className="font-mono text-base">History</CardTitle>
             <Select value={direction} onValueChange={(v) => setDirection(v as typeof direction)}>

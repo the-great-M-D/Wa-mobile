@@ -85,8 +85,8 @@ export function Settings() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-mono font-bold tracking-tight mb-2">Settings</h1>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-mono font-bold tracking-tight mb-1">Settings</h1>
         <p className="text-muted-foreground font-mono text-sm">Configure bot behavior and features.</p>
       </div>
 

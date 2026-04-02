@@ -144,12 +144,12 @@ export function AutoReplies() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
         <div>
-          <h1 className="text-3xl font-mono font-bold tracking-tight mb-2">Auto-Replies</h1>
+          <h1 className="text-2xl md:text-3xl font-mono font-bold tracking-tight mb-1">Auto-Replies</h1>
           <p className="text-muted-foreground font-mono text-sm">Automatic response rules for incoming messages.</p>
         </div>
-        <Button onClick={openCreate} className="font-mono font-bold">
+        <Button onClick={openCreate} className="font-mono font-bold shrink-0">
           <Plus className="w-4 h-4 mr-2" />
           NEW RULE
         </Button>
